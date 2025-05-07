@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 
 public class Block {
 	private int blockIndex;//block unique index

@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 
 import java.util.Arrays;
 
@@ -23,7 +23,7 @@ public class ByteSerialize {
 		meta_buf_bytes = null;
 		return returndata;
 	}
-	
+
 	public BucketMetadata metadataFromSerialize(byte[] metaBytes){
 		int startIndex = 0;
 		int read_counter = Ints.fromByteArray(Arrays.copyOfRange(metaBytes, startIndex, startIndex+4));

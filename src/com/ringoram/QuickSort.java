@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 
 public class QuickSort {
 	public void quickSorting(Two_random[] arr){

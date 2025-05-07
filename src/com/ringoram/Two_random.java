@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 
 public class Two_random {
 	int random;

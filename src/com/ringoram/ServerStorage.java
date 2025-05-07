@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 /*
  * store each bucket to a file
  */
@@ -21,7 +21,7 @@ public class ServerStorage {
 		File f = new File(dst);
 		if(!f.exists())
 			f.createNewFile();
-		
+	
         FileOutputStream out;
         try {
             out = new FileOutputStream(f);

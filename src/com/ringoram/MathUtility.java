@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 
 import java.util.Random;
 
@@ -18,7 +18,7 @@ public class MathUtility {
 	public int get_random(int range) {//return randombytes_uniform(range);
 		return rnd_generator.nextInt(range);	
 	 }
-	
+
 	public  int[] get_random_permutation(int len) {
 		int permutation[] = new int[len];
 	    Two_random random_list[] = new Two_random[len];

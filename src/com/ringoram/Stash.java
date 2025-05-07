@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -84,7 +84,6 @@ public class Stash {
 	        right = 2 * bucket_id + 1;
 	    }
 
-
 	    int add = remove_by_bucket_helper(left, len, start, block_list);
 	    len -= add;
 	    start += add;
@@ -119,6 +118,11 @@ public class Stash {
 	}
 	public void setCount(int[] counter) {
 		this.counter = counter;
+	}
+
+	public Block[] getBlocks() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

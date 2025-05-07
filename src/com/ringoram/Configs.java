@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 
 public class Configs {
 	// thread fixed number
@@ -6,7 +6,7 @@ public class Configs {
 
 	// server host name and port
 	public static String SERVER_HOSTNAME = "localhost";
-	public static int SERVER_PORT = 12339;
+	public static int SERVER_PORT = 12340;
 	
 	//block data length
 	public static int BLOCK_DATA_LEN = 8;
@@ -15,7 +15,7 @@ public class Configs {
 	//the min dummy block count in the bucket
 	public static int DUMMY_BLOCK_COUNT = 6;
 	//total bucket count in the tree, must be full binary tree
-	public static int BUCKET_COUNT = 7;
+	public static int BUCKET_COUNT =4;
 	
 	//total block count in bucket
 	public static int Z = REAL_BLOCK_COUNT + DUMMY_BLOCK_COUNT;
@@ -38,5 +38,14 @@ public class Configs {
 	public enum OPERATION{ORAM_ACCESS_READ,ORAM_ACCESS_WRITE};
 	
 	//bucket store source
-	public static String STORAGE_PATH = "/home/hadoop/eclipse/RingORAM/serverData/bucket_";
+	public static String STORAGE_PATH = "/Users/rajendrathalluru/Documents";
+	
+	// AES key (16 bytes for AES-128)
+	public static final byte[] KEY = new byte[] {
+	    0x00, 0x01, 0x02, 0x03,
+	    0x04, 0x05, 0x06, 0x07,
+	    0x08, 0x09, 0x0A, 0x0B,
+	    0x0C, 0x0D, 0x0E, 0x0F
+	};
+
 }

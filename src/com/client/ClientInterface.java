@@ -1,6 +1,6 @@
-package com.client;
+package src.com.client;
 
-import com.ringoram.BucketMetadata;
+import src.com.ringoram.BucketMetadata;
 
 public interface ClientInterface {
 
@@ -15,4 +15,5 @@ public interface ClientInterface {
 	
 	//when block in bucket almost all accessed, early re-shuffle the bucket
 	public void early_reshuffle(int pathID, BucketMetadata[] meta_list);
+	
 }

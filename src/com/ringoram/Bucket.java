@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 
 import java.io.Serializable;
 
@@ -39,7 +39,7 @@ public class Bucket implements Serializable{
 	public void reset_valid_bits(int index){
 		bucket_meta.set_meta_validbit(index);
 	}
-	
+
 	//every time the bucket be accessed, add the read count
 	public void add_read_counter(){
 		bucket_meta.add_meta_readcounter();

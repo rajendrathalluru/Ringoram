@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 
 import java.io.Serializable;
 
@@ -55,7 +55,7 @@ public class BucketMetadata implements Serializable{
 			meta_buf[Configs.REAL_BLOCK_COUNT + i] = offset[i];
 		}
 	}
-	
+
 	public int[] get_offset(){
 		int[] off_set = new int[Configs.Z];
 		for(int i=0;i<Configs.Z;i++){

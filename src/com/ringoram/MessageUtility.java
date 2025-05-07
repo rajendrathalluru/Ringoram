@@ -1,4 +1,4 @@
-package com.ringoram;
+package src.com.ringoram;
 
 import java.nio.ByteBuffer;
 
@@ -43,7 +43,7 @@ public class MessageUtility {
 
         return Bytes.concat(messageTypeBytes, messageLengthBytes);
     }
-	
+
 	public static ByteBuffer createMessageHeaderBuffer(int messageType, int messageSize) {
         byte[] messageTypeBytes = Ints.toByteArray(messageType);
         byte[] messageLengthBytes = Ints.toByteArray(messageSize);
