@@ -52,8 +52,6 @@ Edit `oram.properties` to set ORAM parameters:
 ```properties
 TREE_DEPTH=10
 BUCKET_SIZE=4
-RECURSION_LEVELS=3
-XOR_MODE=true
 SERVER_IP=your.ec2.ip.address
 SERVER_PORT=9000
 ```
