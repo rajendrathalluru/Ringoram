@@ -13,6 +13,11 @@ import java.util.concurrent.Future;
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
 
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.GeneralSecurityException;
+
 import src.com.ringoram.Block;
 import src.com.ringoram.Bucket;
 import src.com.ringoram.BucketMetadata;
@@ -30,6 +35,9 @@ public class Client implements ClientInterface{
 	protected InetSocketAddress serverAddress;
 	protected AsynchronousChannelGroup mThreadGroup;
 	protected AsynchronousSocketChannel mChannel;
+	
+	private Cipher cipherEncrypt;
+	private Cipher cipherDecrypt;
 
 	private int evict_count;
 	private int evict_g;
@@ -47,6 +55,21 @@ public class Client implements ClientInterface{
 		this.stash = new Stash();
 		this.seria = new ByteSerialize();
 		this.math = new MathUtility();
+		
+		
+		
+
+
+		try {
+		    SecretKeySpec keySpec = new SecretKeySpec(Configs.KEY, "AES");
+		    cipherEncrypt = Cipher.getInstance("AES/ECB/NoPadding");
+		    cipherEncrypt.init(Cipher.ENCRYPT_MODE, keySpec);
+		    cipherDecrypt = Cipher.getInstance("AES/ECB/NoPadding");
+		    cipherDecrypt.init(Cipher.DECRYPT_MODE, keySpec);
+		} catch (GeneralSecurityException e) {
+		    throw new RuntimeException("Failed to initialize AES cipher", e);
+		}
+
 		//when initializing, assign all block a random path id
 		for(int i=0;i<Configs.BLOCK_COUNT;i++){
 			this.position_map[i] = math.getRandomLeaf() + Configs.LEAF_START;
@@ -64,6 +87,23 @@ public class Client implements ClientInterface{
 			e.printStackTrace();
 		}
 	}
+	
+	
+	private byte[] encrypt(byte[] data) {
+	    try {
+	        return cipherEncrypt.doFinal(data);
+	    } catch (GeneralSecurityException e) {
+	        throw new RuntimeException("Encryption failed", e);
+	    }
+	}
+
+	private byte[] decrypt(byte[] data) {
+	    try {
+	        return cipherDecrypt.doFinal(data);
+	    } catch (GeneralSecurityException e) {
+	        throw new RuntimeException("Decryption failed", e);
+	    }
+	}
 
 	public void initServer(){
 		ByteBuffer header = MessageUtility.createMessageHeaderBuffer(MessageUtility.ORAM_INIT, 0);
@@ -71,6 +111,10 @@ public class Client implements ClientInterface{
 		System.out.println("client INIT server successful!" + responseBytes[0]);
 		responseBytes = null;
 	}
+	
+
+
+
 	
 	/* core operation in ring oram
 	 * @param blockIndex: block unique index
@@ -291,8 +335,9 @@ public class Client implements ClientInterface{
 		for(int i=0;i<Configs.REAL_BLOCK_COUNT;i++){
 			//real block and not been accessed before, add to the stash
 			if((block_index[i]>=0) && (valid_bits[offset[i]]==(byte)1)){
-				byte[] block_data = bucket.getBlock(offset[i]);
-				stash.add(new Block(block_index[i],position_map[block_index[i]],block_data));
+				byte[] enc_data = bucket.getBlock(offset[i]);
+				byte[] block_data = decrypt(enc_data);
+				stash.add(new Block(block_index[i], position_map[block_index[i]], block_data));
 			}
 		}
 	}
@@ -316,7 +361,8 @@ public class Client implements ClientInterface{
 		byte[] bucket_data = new byte[Configs.Z*Configs.BLOCK_DATA_LEN];
 		for(int i=0;i<count;i++){
 			int offset_i = offset[i]*Configs.BLOCK_DATA_LEN;
-			byte[] block_data = block_list[i].getData();
+			byte[] block_data = encrypt(block_list[i].getData());
+
 			for(int j=0;j<Configs.BLOCK_DATA_LEN;j++){
 				bucket_data[offset_i+j] = block_data[j];
 			}

@@ -1,3 +1,4 @@
+// XOR-based ORAM Client with AES Encryption
 package src.com.client;
 
 import java.io.IOException;
@@ -9,6 +10,10 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.GeneralSecurityException;
 
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
@@ -32,6 +37,9 @@ public class ClientXOR implements ClientInterface {
     ByteSerialize seria;
     MathUtility math;
 
+    private final Cipher cipherEncrypt;
+    private final Cipher cipherDecrypt;
+
     public ClientXOR() {
         this.evict_count = 0;
         this.evict_g = 0;
@@ -39,6 +47,16 @@ public class ClientXOR implements ClientInterface {
         this.stash = new Stash();
         this.seria = new ByteSerialize();
         this.math = new MathUtility();
+
+        try {
+            SecretKeySpec keySpec = new SecretKeySpec(Configs.KEY, "AES");
+            cipherEncrypt = Cipher.getInstance("AES/ECB/NoPadding");
+            cipherEncrypt.init(Cipher.ENCRYPT_MODE, keySpec);
+            cipherDecrypt = Cipher.getInstance("AES/ECB/NoPadding");
+            cipherDecrypt.init(Cipher.DECRYPT_MODE, keySpec);
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException("Failed to initialize AES cipher", e);
+        }
 
         for (int i = 0; i < Configs.BLOCK_COUNT; i++) {
             this.position_map[i] = math.getRandomLeaf() + Configs.LEAF_START;
@@ -57,18 +75,33 @@ public class ClientXOR implements ClientInterface {
             e.printStackTrace();
         }
     }
-    
-    @SuppressWarnings("rawtypes")
+
+    private byte[] encrypt(byte[] data) {
+        try {
+            return cipherEncrypt.doFinal(data);
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException("Encryption failed", e);
+        }
+    }
+
+    private byte[] decrypt(byte[] data) {
+        try {
+            return cipherDecrypt.doFinal(data);
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException("Decryption failed", e);
+        }
+    }
+
     public byte[] sendAndGetMessage(ByteBuffer requestBuffer, int messageType) {
         byte[] responseBytes = null;
         try {
             while (requestBuffer.remaining() > 0) {
-                Future requestBufferRead = mChannel.write(requestBuffer);
+                Future<?> requestBufferRead = mChannel.write(requestBuffer);
                 requestBufferRead.get();
             }
 
             ByteBuffer typeAndSize = ByteBuffer.allocate(8);
-            Future typeAndSizeRead = mChannel.read(typeAndSize);
+            Future<?> typeAndSizeRead = mChannel.read(typeAndSize);
             typeAndSizeRead.get();
             typeAndSize.flip();
             int[] typeAndSizeInt = MessageUtility.parseTypeAndLength(typeAndSize);
@@ -77,7 +110,7 @@ public class ClientXOR implements ClientInterface {
 
             ByteBuffer responseBuffer = ByteBuffer.allocate(size);
             while (responseBuffer.remaining() > 0) {
-                Future responseBufferRead = mChannel.read(responseBuffer);
+                Future<?> responseBufferRead = mChannel.read(responseBuffer);
                 responseBufferRead.get();
             }
             responseBuffer.flip();
@@ -98,7 +131,6 @@ public class ClientXOR implements ClientInterface {
         }
         return responseBytes;
     }
-
 
     public void initServer() {
         ByteBuffer header = MessageUtility.createMessageHeaderBuffer(MessageUtility.ORAM_INIT, 0);
@@ -193,7 +225,6 @@ public class ClientXOR implements ClientInterface {
     }
 
     public void read_block(int pathID, int blockIndex, BucketMetadata[] meta_list) {
-        System.out.println("Reading blocks from path ID: " + pathID);
         boolean found = false;
         int[] read_offset = new int[Configs.HEIGHT];
 
@@ -213,7 +244,6 @@ public class ClientXOR implements ClientInterface {
                     read_offset[i] = math.get_random_dummy(meta_list[i].getValid_bits(), meta_list[i].get_offset());
                 }
             }
-            System.out.println("  Level " + i + ": Reading " + (found ? "real" : "dummy") + " block from offset " + read_offset[i]);
             if (pos_run == 0) break;
         }
 
@@ -229,7 +259,8 @@ public class ClientXOR implements ClientInterface {
         byte[] responseBytes = sendAndGetMessage(requestBuffer, MessageUtility.ORAM_READBLOCK);
 
         if (found) {
-            Block blk = new Block(blockIndex, pathID, responseBytes);
+            byte[] decrypted = decrypt(responseBytes);
+            Block blk = new Block(blockIndex, pathID, decrypted);
             stash.add(blk);
         }
     }
@@ -255,17 +286,14 @@ public class ClientXOR implements ClientInterface {
         Bucket bucket = seria.bucketFromSerialize(responseBytes);
         BucketMetadata meta = bucket.getBucket_meta();
 
-        System.out.println("Reading bucket ID: " + bucket_id);
-        System.out.println("Bucket metadata: " + Arrays.toString(meta.get_block_index()));
-        System.out.println("Valid bits: " + Arrays.toString(meta.getValid_bits()));
-
         int[] block_index = meta.get_block_index();
         int[] offset = meta.get_offset();
         byte[] valid_bits = meta.getValid_bits();
         for (int i = 0; i < Configs.REAL_BLOCK_COUNT; i++) {
             if ((block_index[i] >= 0) && (valid_bits[offset[i]] == 1)) {
-                byte[] block_data = bucket.getBlock(offset[i]);
-                stash.add(new Block(block_index[i], position_map[block_index[i]], block_data));
+                byte[] enc_data = bucket.getBlock(offset[i]);
+                byte[] data = decrypt(enc_data);
+                stash.add(new Block(block_index[i], position_map[block_index[i]], data));
             }
         }
     }
@@ -275,16 +303,13 @@ public class ClientXOR implements ClientInterface {
         Block[] block_list = new Block[Configs.REAL_BLOCK_COUNT];
         int count = stash.remove_by_bucket(bucket_id, Configs.REAL_BLOCK_COUNT, block_list);
 
-        System.out.println("Writing bucket ID: " + bucket_id);
-        System.out.println("Writing " + count + " real blocks into the bucket.");
-
         meta.set_offset(math.get_random_permutation(Configs.Z));
         int[] offset = meta.get_offset();
         byte[] bucket_data = new byte[Configs.Z * Configs.BLOCK_DATA_LEN];
 
         for (int i = 0; i < count; i++) {
             int offset_i = offset[i] * Configs.BLOCK_DATA_LEN;
-            byte[] block_data = block_list[i].getData();
+            byte[] block_data = encrypt(block_list[i].getData());
             System.arraycopy(block_data, 0, bucket_data, offset_i, Configs.BLOCK_DATA_LEN);
             if (i < Configs.REAL_BLOCK_COUNT) {
                 meta.set_blockIndex_bit(i, block_list[i].getBlockIndex());
@@ -311,7 +336,6 @@ public class ClientXOR implements ClientInterface {
     public void early_reshuffle(int pathID, BucketMetadata[] meta_list) {
         for (int pos_run = pathID, i = 0; pos_run >= 0; pos_run = (pos_run - 1) >> 1, i++) {
             if (meta_list[i].getRead_counter() >= (Configs.DUMMY_BLOCK_COUNT - 2)) {
-                System.out.println("early reshuffle in pos " + pos_run);
                 read_bucket(pos_run);
                 write_bucket(pos_run);
             }
@@ -320,7 +344,6 @@ public class ClientXOR implements ClientInterface {
     }
 
     public void printPositionMap() {
-        System.out.println("Position Map:");
         for (int i = 0; i < position_map.length; i++) {
             System.out.println("  Block " + i + " -> Leaf " + position_map[i]);
         }

@@ -9,7 +9,7 @@ public class Configs {
 	public static int SERVER_PORT = 12340;
 	
 	//block data length
-	public static int BLOCK_DATA_LEN = 8;
+	public static int BLOCK_DATA_LEN = 64;
 	//the max real block count in the bucket
 	public static int REAL_BLOCK_COUNT = 4;
 	//the min dummy block count in the bucket
@@ -33,7 +33,7 @@ public class Configs {
 	
 	//shuffle rate
 	public static int SHUFFLE_RATE = 4;
-	
+	//public static final int BLOCK_DATA_LEN = 64; // for example; must be a multiple of 16
 	//request operation: read or write
 	public enum OPERATION{ORAM_ACCESS_READ,ORAM_ACCESS_WRITE};
 	
