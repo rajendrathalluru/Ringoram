@@ -1,24 +1,24 @@
 # Ring ORAM: Recursive & XOR-Optimized Implementation
 
-> ✅ This version includes encryption in the XOR-based path access optimization.
+>  This version includes encryption in the XOR-based path access optimization.
 
 ---
 
-## 📦 Features
+##  Features
 
-- ✅ Implements Ring ORAM with:
+-  Implements Ring ORAM with:
   - Recursive position map
   - XOR-based online bandwidth reduction (with encryption)
   - Reverse lexicographic eviction
   - Early reshuffling of buckets
-- ✅ Configurable parameters (tree depth, Z, recursion depth)
-- ✅ Modular Java codebase with client-server architecture
-- ✅ Server deployable on Amazon EC2 or local machine
-- ✅ Functional testing with detailed log output (stash, position map)
+-  Configurable parameters (tree depth, Z, recursion depth)
+-  Modular Java codebase with client-server architecture
+-  Server deployable on Amazon EC2 or local machine
+-  Functional testing with detailed log output (stash, position map)
 
 ---
 
-## ⚙️ Requirements
+## ⚙ Requirements
 
 - Java 11+  
 - [`guava-19.0.jar`](https://mvnrepository.com/artifact/com.google.guava/guava/19.0)  
@@ -26,7 +26,7 @@
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 RingORAM/
@@ -45,9 +45,9 @@ RingORAM/
 
 ---
 
-## 🏁 Getting Started
+##  Getting Started
 
-### 🔧 Configuration
+###  Configuration
 Edit `oram.properties` to set ORAM parameters:
 ```properties
 TREE_DEPTH=10
@@ -70,11 +70,11 @@ SERVER_PORT=9000
    java -cp bin:libs/guava-19.0.jar com.client.Client
    ```
 
-⚠️ Ensure the server is running before the client starts.
+⚠ Ensure the server is running before the client starts.
 
 ---
 
-## 📊 Testing and Debugging
+##  Testing and Debugging
 
 - Logs stash size after every access.
 - Dumps eviction path and bucket contents.
@@ -83,7 +83,7 @@ SERVER_PORT=9000
 
 ---
 
-## 🧱 Internal Design Notes
+##  Internal Design Notes
 
 ### Bucket Metadata (Used in `com.ringoram`)
 
@@ -101,14 +101,14 @@ This layout allows the client to selectively fetch blocks during path reads and 
 
 ---
 
-## 📚 References
+##  References
 
 - Ren, Ling, et al. "**Constants Count: Practical Improvements to Oblivious RAM**", USENIX Security Symposium 2015.  
   [https://www.usenix.org/conference/usenixsecurity15/technical-sessions/presentation/ren-ling](https://www.usenix.org/conference/usenixsecurity15/technical-sessions/presentation/ren-ling)
 
 ---
 
-## 🧑‍💻 Authors
+##  Authors
 
 - Rajendra Thalluru  
 - Sravan Nekkanti  
